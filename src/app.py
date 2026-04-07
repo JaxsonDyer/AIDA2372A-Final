@@ -20,33 +20,36 @@ try:
 except Exception as e:
     print(f"Failed to load model: {e}")
 
+
 @app.route('/health', methods=['GET'])
 def health():
     if model is not None:
         return jsonify({"status": "healthy", "model_loaded": True}), 200
     return jsonify({"status": "unhealthy", "model_loaded": False}), 503
 
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None:
         return jsonify({"error": "Model is not loaded"}), 503
-        
+
     try:
         data = request.get_json(force=True)
         # Convert incoming JSON into a DataFrame
         df = pd.DataFrame(data)
-        
+
         # Predict using loaded MLflow model
         predictions = model.predict(df)
-        
+
         # Determine probability if available
-        # pyfunc abstracts predict, typically returning the class directly 
+        # pyfunc abstracts predict, typically returning the class directly
         # for classification, we just return the prediction.
         return jsonify({
             "predictions": predictions.tolist()
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
