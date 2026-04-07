@@ -7,8 +7,8 @@ This project operationalizes a classification model predicting employee attritio
 It covers the full MLOps lifecycle from data versioning to automated deployment.
 
 ## Key Technologies & Architecture
-1. **Data Versioning (DVC)**: The raw dataset is tracked using DVC with an Amazon S3 remote.
-2. **Experiment Tracking (MLflow)**: Multiple experiments are tracked locally, comparing F1 score and accuracy of Logistic Regression, Random Forest, and XGBoost models. Best performing models are registered in the MLflow model registry.
+1. **Data Versioning (DVC)**: The raw dataset is tracked using DVC with DagsHub acting as the remote storage, eliminating the need for expensive AWS S3 buckets.
+2. **Experiment Tracking (MLflow)**: Model training is sent natively to DagsHub's MLflow Tracking server, tracking experiments, F1 scores, and model artifact registries automatically for all pipelines.
 3. **Model Serving (Flask & Docker)**: The best registered model is serialized and packaged into a Docker container serving a `/predict` REST API.
 4. **CI/CD Automation (GitHub Actions)**: Every push to `main` triggers a complete CI/CD pipeline which lints code (`flake8`), runs unit tests (`pytest`), builds the Docker image, and pushes it to Docker Hub.
 5. **Workflow Orchestration (Airflow)**: An Apache Airflow DAG schedules retraining on a weekly interval by pulling the latest DVC data and re-running the MLflow experiment pipeline.
@@ -73,6 +73,11 @@ docker run -p 5000:5000 employee-attrition-model
 ## Automations & Orchestration
 * **Airflow**: To run Airflow, start your airflow webserver and scheduler pointing to `airflow/` directory.
 * **CI/CD**: Uses the `.github/workflows/main.yml`.
+
+## Project Evidence (Screenshots)
+### Airflow DAG Orchestration
+![Airflow DAGs List](screenshots/dags_section_ss.png)
+![Airflow DAG Execution](screenshots/dags_task_run_training_ss.png)
 
 ## Future Improvements
 * Integrating `Great Expectations` to perform automated data quality checks before the DAG training.

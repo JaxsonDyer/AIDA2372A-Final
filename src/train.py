@@ -30,7 +30,7 @@ def load_data():
     
     return train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     
-def run_experiment(name, model, X_train, X_test, y_train, y_test, is_xgb=False):
+def run_experiment(name, model, X_train, X_test, y_train, y_test):
     with mlflow.start_run(run_name=name):
         model.fit(X_train, y_train)
         predictions = model.predict(X_test)
@@ -42,10 +42,7 @@ def run_experiment(name, model, X_train, X_test, y_train, y_test, is_xgb=False):
         mlflow.log_metric("validation_f1", f1)
         mlflow.log_metric("accuracy", acc)
         
-        if is_xgb:
-            mlflow.xgboost.log_model(model, "model")
-        else:
-            mlflow.sklearn.log_model(model, "model")
+        mlflow.sklearn.log_model(model, "model")
             
         print(f"[{name}] F1 Score: {f1:.4f} | Accuracy: {acc:.4f}")
         return f1, mlflow.active_run().info.run_id
@@ -86,7 +83,7 @@ def main():
     # 4. XGBoost Classifier
     print("Running XGBoost...")
     xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42, scale_pos_weight=(len(y_train) - sum(y_train)) / sum(y_train))
-    f1, run_id = run_experiment("XGBoost", xgb, X_train, X_test, y_train, y_test, is_xgb=True)
+    f1, run_id = run_experiment("XGBoost", xgb, X_train, X_test, y_train, y_test)
     runs[run_id] = f1
     
     # Find Best Model
@@ -97,10 +94,18 @@ def main():
     client = mlflow.tracking.MlflowClient()
     model_name = "EmployeeAttritionModel"
     
+    import time
+    print("Waiting 5 seconds for artifacts to sync with DagsHub...")
+    time.sleep(5)
+    
     # Register the best model
-    model_uri = f"runs:/{best_run_id}/model"
-    mlflow.register_model(model_uri, model_name)
-    print(f"Registered model {model_name} from run {best_run_id}")
+    try:
+        model_uri = f"runs:/{best_run_id}/model"
+        mlflow.register_model(model_uri, model_name)
+        print(f"Registered model {model_name} from run {best_run_id}")
+    except Exception as e:
+        print(f"Failed to automatically register model (this is a known DagsHub API sync delay): {e}")
+        print(f"To manually register, go to DagsHub UI, view run {best_run_id}, and click 'Register Model'.")
 
 if __name__ == "__main__":
     main()

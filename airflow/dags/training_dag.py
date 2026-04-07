@@ -16,7 +16,7 @@ dag = DAG(
     'employee_attrition_training_pipeline',
     default_args=default_args,
     description='A DAG to retrain the employee attrition model',
-    schedule_interval=timedelta(days=7),
+    schedule=timedelta(days=7),
     catchup=False
 )
 
