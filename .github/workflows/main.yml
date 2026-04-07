@@ -44,6 +44,9 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           
+      - name: Create empty model directory
+        run: mkdir -p model
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
