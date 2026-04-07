@@ -28,7 +28,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest tests/
+          PYTHONPATH=. pytest tests/
 
   build_and_push:
     needs: test_and_lint
