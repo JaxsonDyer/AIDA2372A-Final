@@ -13,6 +13,21 @@ It covers the full MLOps lifecycle from data versioning to automated deployment.
 4. **CI/CD Automation (GitHub Actions)**: Every push to `main` triggers a complete CI/CD pipeline which lints code (`flake8`), runs unit tests (`pytest`), builds the Docker image, and pushes it to Docker Hub.
 5. **Workflow Orchestration (Airflow)**: An Apache Airflow DAG schedules retraining on a weekly interval by pulling the latest DVC data and re-running the MLflow experiment pipeline.
 
+## Dataset
+This project uses the **IBM HR Analytics Employee Attrition dataset** tracked by DVC (`data/WA_Fn-UseC_-HR-Employee-Attrition.csv`). The dataset contains various numerical and categorical variables regarding employee backgrounds and performance. 
+- Irrelevant fields such as `EmployeeCount`, `Over18`, `StandardHours`, and `EmployeeNumber` are dropped during preprocessing.
+- Categorical features are encoded using `LabelEncoder`.
+- The dataset is split into 80% training data and 20% testing data, stratified by the target variable `Attrition`.
+
+## Models & Training
+The model training is executed via `src/train.py` and tracks experiments in DagsHub using MLflow. Four candidate models are trained and evaluated:
+1. **Logistic Regression (Baseline)**: Trained with balanced class weights to establish a baseline.
+2. **Random Forest (Default)**: A default Random Forest classifier with balanced weights.
+3. **Random Forest (Tuned)**: A Random Forest tailored with 200 estimators and a max depth of 10.
+4. **XGBoost Classifier**: An optimized gradient boosting tree using `logloss` metric.
+
+During training, metrics like `validation_f1` and `accuracy` are logged. The pipeline compares the output of these models and programmatically selects the **Best Model** based on the highest F1-score. This best model is then automatically registered to the DagsHub MLflow Registry as `EmployeeAttritionModel`.
+
 ## Project Structure
 ```
 .
@@ -26,6 +41,7 @@ It covers the full MLOps lifecycle from data versioning to automated deployment.
 │   └── train.py                   # Model training and MLflow tracking script
 ├── tests/
 │   └── test_api.py                # Unit tests for the Flask API
+├── screenshots/                   # Project screenshots
 ├── .github/workflows/main.yml     # CI/CD action
 ├── Dockerfile                     # Container definition
 ├── requirements.txt               # Dependencies
@@ -78,6 +94,9 @@ docker run -p 5000:5000 employee-attrition-model
 ### Airflow DAG Orchestration
 ![Airflow DAGs List](screenshots/dags_section_ss.png)
 ![Airflow DAG Execution](screenshots/dags_task_run_training_ss.png)
+
+### CI/CD Pipeline (GitHub Actions)
+![CI/CD Pipeline](screenshots/cidc_github_ss.png)
 
 ## Future Improvements
 * Integrating `Great Expectations` to perform automated data quality checks before the DAG training.
