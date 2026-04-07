@@ -45,7 +45,9 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           
       - name: Create empty model directory
-        run: mkdir -p model
+        run: |
+          mkdir -p model
+          touch model/.gitkeep
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
